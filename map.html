@@ -1,49 +1,166 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Map Project</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive World Map</title>
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
             overflow: hidden;
+            height: 100%;
         }
-
-        #map {
-            width: 100%;
+        #map-container {
+            width: 100vw;
             height: 100vh;
-            background-image: url('https://www.lib.utexas.edu/maps/historical/txu-pclmaps-oclc-6566240.jpg');
-            background-size: 100% 100%;
-            background-position: center;
-            transition: transform 0.5s;
+            position: relative;
         }
-
-        #map.zoom-in {
-            transform: scale(2);
+        #world-map {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.1s ease;
         }
-
-        #map.zoom-out {
-            transform: scale(0.5);
+        #controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            background: rgba(255,255,255,0.7);
+            padding: 10px;
+            border-radius: 5px;
+        }
+        #controls button {
+            margin-right: 10px;
+            padding: 5px 10px;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-    <button onclick="zoomIn()">Zoom In</button>
-    <button onclick="zoomOut()">Zoom Out</button>
+    <div id="controls">
+        <button id="zoom-in">Zoom In (+)</button>
+        <button id="zoom-out">Zoom Out (-)</button>
+        <button id="reset-view">Reset View</button>
+    </div>
+    <div id="map-container">
+        <object id="world-map" type="image/svg+xml" data="worldmap.svg">
+            Your browser does not support SVG
+        </object>
+    </div>
 
     <script>
-        let currentScale = 1;
+        const mapContainer = document.getElementById('map-container');
+        const worldMap = document.getElementById('world-map');
+        const zoomInBtn = document.getElementById('zoom-in');
+        const zoomOutBtn = document.getElementById('zoom-out');
+        const resetBtn = document.getElementById('reset-view');
 
-        function zoomIn() {
-            currentScale += 0.1;
-            document.getElementById('map').style.transform = `scale(${currentScale})`;
-        }
+        let scale = 1;
+        let translateX = 0;
+        let translateY = 0;
+        let isDragging = false;
+        let startX, startY;
 
-        function zoomOut() {
-            currentScale -= 0.1;
-            document.getElementById('map').style.transform = `scale(${currentScale})`;
-        }
+        // Wait for SVG to load
+        worldMap.addEventListener('load', () => {
+            const svgDoc = worldMap.contentDocument;
+            const svgElement = svgDoc.documentElement;
+
+            // Zoom functionality
+            function zoom(delta) {
+                const minZoom = 1;
+                const maxZoom = 7;
+                scale = Math.max(minZoom, Math.min(maxZoom, scale + delta));
+                enforceMapBounds();
+                updateTransform();
+            }
+
+            // Enforce map boundaries
+            function enforceMapBounds() {
+                const containerWidth = mapContainer.clientWidth;
+                const containerHeight = mapContainer.clientHeight;
+                const mapWidth = svgElement.getBoundingClientRect().width;
+                const mapHeight = svgElement.getBoundingClientRect().height;
+
+                // Calculate max allowed translation
+                const maxTranslateX = Math.max(0, (mapWidth - containerWidth) / 2);
+                const maxTranslateY = Math.max(0, (mapHeight - containerHeight) / 2);
+
+                // Restrict translation
+                translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX));
+                translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY));
+            }
+
+            // Update map transform
+            function updateTransform() {
+                svgElement.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+            }
+
+            // Zoom in button
+            zoomInBtn.addEventListener('click', () => {
+                zoom(0.25);
+            });
+
+            // Zoom out button
+            zoomOutBtn.addEventListener('click', () => {
+                zoom(-0.25);
+            });
+
+            // Reset view button
+            resetBtn.addEventListener('click', () => {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                updateTransform();
+            });
+
+            // Pan functionality
+            mapContainer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mapContainer.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                enforceMapBounds();
+                updateTransform();
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                mapContainer.style.cursor = 'grab';
+            });
+
+            // Scroll wheel zoom with boundary handling
+            mapContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                zoom(delta);
+
+                // Horizontal boundary handling
+                if (translateX > 0) {
+                    translateX = 0;
+                }
+
+                // Vertical boundary handling
+                if (translateY > 0) {
+                    translateY = 0;
+                }
+
+                updateTransform();
+            });
+
+            // Initial cursor style
+            mapContainer.style.cursor = 'grab';
+        });
     </script>
 </body>
 </html>
