@@ -139,23 +139,21 @@
                 mapContainer.style.cursor = 'grab';
             });
 
-            // Scroll wheel zoom with boundary handling
+            // Scroll wheel zoom and trackpad scroll handling
             mapContainer.addEventListener('wheel', (e) => {
                 e.preventDefault();
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                zoom(delta);
 
-                // Horizontal boundary handling
-                if (translateX > 0) {
-                    translateX = 0;
+                if (e.ctrlKey || e.metaKey) {
+                    // Pinch-to-zoom on trackpad
+                    const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                    zoom(delta);
+                } else {
+                    // Horizontal and vertical panning
+                    translateX -= e.deltaX;
+                    translateY -= e.deltaY;
+                    enforceMapBounds();
+                    updateTransform();
                 }
-
-                // Vertical boundary handling
-                if (translateY > 0) {
-                    translateY = 0;
-                }
-
-                updateTransform();
             });
 
             // Initial cursor style
