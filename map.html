@@ -3,157 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive World Map</title>
+    <title>Interactive Map</title>
     <style>
-        body, html {
+        body {
             margin: 0;
-            padding: 0;
             overflow: hidden;
-            height: 100%;
         }
-        #map-container {
+        #container {
             width: 100vw;
             height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            overflow: hidden;
             position: relative;
+        }
+        svg {
             cursor: grab;
+            user-select: none;
         }
-        #world-map {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            transition: transform 0.1s ease;
-        }
-        #controls {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 10;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 10px;
-            border-radius: 5px;
-        }
-        #controls button {
-            margin-right: 10px;
-            padding: 5px 10px;
+        svg:active {
+            cursor: grabbing;
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button id="zoom-in">Zoom In (+)</button>
-        <button id="zoom-out">Zoom Out (-)</button>
-        <button id="reset-view">Reset View</button>
-    </div>
-    <div id="map-container">
-        <object id="world-map" type="image/svg+xml" data="worldmap.svg">
-            Your browser does not support SVG
-        </object>
+    <div id="container">
+        <svg id="map" xmlns="http://www.w3.org/2000/svg">
+            <image href="worldmap.svg" x="0" y="0" width="2000" height="1000" />
+        </svg>
     </div>
 
     <script>
-        const mapContainer = document.getElementById('map-container');
-        const worldMap = document.getElementById('world-map');
-        const zoomInBtn = document.getElementById('zoom-in');
-        const zoomOutBtn = document.getElementById('zoom-out');
-        const resetBtn = document.getElementById('reset-view');
-
-        let scale = 1;
-        let translateX = 0;
-        let translateY = 0;
+        const svg = document.getElementById('map');
         let isDragging = false;
         let startX, startY;
 
-        // Wait for SVG to load
-        worldMap.addEventListener('load', () => {
-            const svgDoc = worldMap.contentDocument;
-            const svgElement = svgDoc.documentElement;
+        const originalWidth = 2000;
+        const originalHeight = 1000;
+        const maxZoom = 6; // Maximum zoom level
+        const minZoom = 1; // Minimum zoom level
 
-            // Update map transform
-            function updateTransform() {
-                svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
-                svgElement.style.transformOrigin = "0 0";
-            }
+        let viewBoxX = 0, viewBoxY = 0, viewBoxWidth = originalWidth, viewBoxHeight = originalHeight;
 
-            // Enforce map boundaries (optional, can be customized)
-            function enforceMapBounds() {
-                const containerWidth = mapContainer.clientWidth;
-                const containerHeight = mapContainer.clientHeight;
-                const scaledWidth = svgElement.getBoundingClientRect().width;
-                const scaledHeight = svgElement.getBoundingClientRect().height;
+        // Set the initial viewBox
+        svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
 
-                // Limit translation to prevent panning outside the map
-                translateX = Math.max(containerWidth - scaledWidth, Math.min(translateX, 0));
-                translateY = Math.max(containerHeight - scaledHeight, Math.min(translateY, 0));
-            }
-
-            // Zoom functionality
-            function zoom(delta, centerX, centerY) {
-                const prevScale = scale;
-                scale = Math.max(1, Math.min(7, scale + delta));
-                const scaleFactor = scale / prevScale;
-
-                // Adjust translation to zoom into the center of the mouse
-                translateX = centerX - (centerX - translateX) * scaleFactor;
-                translateY = centerY - (centerY - translateY) * scaleFactor;
-
-                enforceMapBounds();
-                updateTransform();
-            }
-
-            // Zoom in button
-            zoomInBtn.addEventListener('click', () => {
-                zoom(0.25, mapContainer.clientWidth / 2, mapContainer.clientHeight / 2);
-            });
-
-            // Zoom out button
-            zoomOutBtn.addEventListener('click', () => {
-                zoom(-0.25, mapContainer.clientWidth / 2, mapContainer.clientHeight / 2);
-            });
-
-            // Reset view button
-            resetBtn.addEventListener('click', () => {
-                scale = 1;
-                translateX = 0;
-                translateY = 0;
-                updateTransform();
-            });
-
-            // Mouse drag to pan
-            mapContainer.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX - translateX;
-                startY = e.clientY - translateY;
-                mapContainer.style.cursor = 'grabbing';
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                translateX = e.clientX - startX;
-                translateY = e.clientY - startY;
-                enforceMapBounds();
-                updateTransform();
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                mapContainer.style.cursor = 'grab';
-            });
-
-            // Scroll wheel zoom
-            mapContainer.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const rect = mapContainer.getBoundingClientRect();
-                const mouseX = e.clientX - rect.left;
-                const mouseY = e.clientY - rect.top;
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                zoom(delta, mouseX, mouseY);
-            });
-
-            // Initial cursor style
-            mapContainer.style.cursor = 'grab';
+        // Mouse down event to start dragging
+        svg.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
         });
+
+        // Mouse move event for dragging
+        svg.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = (startX - e.clientX) * (viewBoxWidth / svg.clientWidth);
+                const dy = (startY - e.clientY) * (viewBoxHeight / svg.clientHeight);
+
+                viewBoxX += dx;
+                viewBoxY += dy;
+
+                svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+
+                startX = e.clientX;
+                startY = e.clientY;
+            }
+        });
+
+        // Mouse up event to stop dragging
+        svg.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Mouse wheel event for zooming
+        svg.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            handleZoom(e.deltaY < 0 ? 1.1 : 1 / 1.1);
+        });
+
+        // Handle zoom (used for mouse and keyboard shortcuts)
+        function handleZoom(scaleFactor) {
+            const centerX = viewBoxX + viewBoxWidth / 2;
+            const centerY = viewBoxY + viewBoxHeight / 2;
+
+            let newWidth = viewBoxWidth * (1 / scaleFactor);
+            let newHeight = viewBoxHeight * (1 / scaleFactor);
+
+            // Constrain zoom to max and min levels
+            if (newWidth < originalWidth / maxZoom || newWidth > originalWidth) {
+                return;
+            }
+
+            viewBoxWidth = newWidth;
+            viewBoxHeight = newHeight;
+
+            // Adjust the viewBox to zoom on the center
+            viewBoxX = centerX - viewBoxWidth / 2;
+            viewBoxY = centerY - viewBoxHeight / 2;
+
+            svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+        }
+
+        // Reset the viewBox to original state
+        function resetZoom() {
+            viewBoxX = 0;
+            viewBoxY = 0;
+            viewBoxWidth = originalWidth;
+            viewBoxHeight = originalHeight;
+
+            svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+        }
+
+        // Keyboard shortcuts for zoom and reset
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '+') {
+                handleZoom(1.1); // Zoom in
+            } else if (e.key === '-') {
+                handleZoom(1 / 1.1); // Zoom out
+            } else if (e.key === 'r') {
+                resetZoom(); // Reset zoom
+            }
+        });
+
+        // Prevent text selection on drag
+        svg.addEventListener('mouseleave', () => { isDragging = false; });
+        svg.addEventListener('contextmenu', (e) => e.preventDefault());
     </script>
 </body>
 </html>
