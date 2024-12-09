@@ -170,6 +170,47 @@
                 updateTransform();
             });
 
+            // Pan functionality
+            mapContainer.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                mapContainer.style.cursor = 'grabbing';
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                enforceMapBounds();
+                updateTransform();
+            });
+
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                mapContainer.style.cursor = 'grab';
+            });
+
+            // Scroll wheel zoom with boundary handling
+            mapContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                zoom(delta);
+
+                // Horizontal boundary handling
+                if (translateX > 0) {
+                    translateX = 0;
+                }
+
+                // Vertical boundary handling
+                if (translateY > 0) {
+                    translateY = 0;
+                }
+
+                updateTransform();
+            });
+
             // Initial cursor style
             mapContainer.style.cursor = 'grab';
         });
