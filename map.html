@@ -61,21 +61,18 @@
         let scale = 1;
         let translateX = 0;
         let translateY = 0;
-        let isDragging = false;
-        let startX, startY;
+        let isPanning = false;
+        let lastX = 0;
+        let lastY = 0;
 
         // Wait for SVG to load
         worldMap.addEventListener('load', () => {
             const svgDoc = worldMap.contentDocument;
             const svgElement = svgDoc.documentElement;
 
-            // Zoom functionality
-            function zoom(delta) {
-                const minZoom = 1;
-                const maxZoom = 7;
-                scale = Math.max(minZoom, Math.min(maxZoom, scale + delta));
-                enforceMapBounds();
-                updateTransform();
+            // Update map transform
+            function updateTransform() {
+                svgElement.style.transform = `scale(${scale}) translate(${translateX / scale}px, ${translateY / scale}px)`;
             }
 
             // Enforce map boundaries
@@ -85,28 +82,84 @@
                 const mapWidth = svgElement.getBoundingClientRect().width;
                 const mapHeight = svgElement.getBoundingClientRect().height;
 
-                // Calculate max allowed translation
-                const maxTranslateX = Math.max(0, (mapWidth - containerWidth) / 2);
-                const maxTranslateY = Math.max(0, (mapHeight - containerHeight) / 2);
+                const maxTranslateX = (mapWidth - containerWidth) / 2 / scale;
+                const maxTranslateY = (mapHeight - containerHeight) / 2 / scale;
 
-                // Restrict translation
                 translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX));
                 translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY));
             }
 
-            // Update map transform
-            function updateTransform() {
-                svgElement.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
+            // Zoom functionality
+            function zoom(delta, mouseX = null, mouseY = null) {
+                const minZoom = 1;
+                const maxZoom = 7;
+                const oldScale = scale;
+                scale = Math.max(minZoom, Math.min(maxZoom, scale + delta));
+
+                if (mouseX !== null && mouseY !== null) {
+                    const rect = svgElement.getBoundingClientRect();
+                    const offsetX = (mouseX - rect.left) / oldScale;
+                    const offsetY = (mouseY - rect.top) / oldScale;
+
+                    translateX -= offsetX * (scale - oldScale);
+                    translateY -= offsetY * (scale - oldScale);
+                }
+
+                enforceMapBounds();
+                updateTransform();
             }
+
+            // Trackpad and Mouse Wheel zoom/pan
+            mapContainer.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                if (e.ctrlKey || e.metaKey) {
+                    const delta = e.deltaY > 0 ? -0.2 : 0.2;
+                    zoom(delta, e.clientX, e.clientY);
+                } else {
+                    translateX -= e.deltaX;
+                    translateY -= e.deltaY;
+                    enforceMapBounds();
+                    updateTransform();
+                }
+            });
+
+            // Pan functionality
+            mapContainer.addEventListener('pointerdown', (e) => {
+                isPanning = true;
+                lastX = e.clientX;
+                lastY = e.clientY;
+                mapContainer.style.cursor = 'grabbing';
+            });
+
+            mapContainer.addEventListener('pointermove', (e) => {
+                if (!isPanning) return;
+
+                const deltaX = e.clientX - lastX;
+                const deltaY = e.clientY - lastY;
+
+                translateX += deltaX;
+                translateY += deltaY;
+
+                enforceMapBounds();
+                updateTransform();
+
+                lastX = e.clientX;
+                lastY = e.clientY;
+            });
+
+            mapContainer.addEventListener('pointerup', () => {
+                isPanning = false;
+                mapContainer.style.cursor = 'grab';
+            });
 
             // Zoom in button
             zoomInBtn.addEventListener('click', () => {
-                zoom(0.25);
+                zoom(0.5);
             });
 
             // Zoom out button
             zoomOutBtn.addEventListener('click', () => {
-                zoom(-0.25);
+                zoom(-0.5);
             });
 
             // Reset view button
@@ -114,47 +167,6 @@
                 scale = 1;
                 translateX = 0;
                 translateY = 0;
-                updateTransform();
-            });
-
-            // Pan functionality
-            mapContainer.addEventListener('mousedown', (e) => {
-                isDragging = true;
-                startX = e.clientX - translateX;
-                startY = e.clientY - translateY;
-                mapContainer.style.cursor = 'grabbing';
-            });
-
-            document.addEventListener('mousemove', (e) => {
-                if (!isDragging) return;
-                
-                translateX = e.clientX - startX;
-                translateY = e.clientY - startY;
-                enforceMapBounds();
-                updateTransform();
-            });
-
-            document.addEventListener('mouseup', () => {
-                isDragging = false;
-                mapContainer.style.cursor = 'grab';
-            });
-
-            // Scroll wheel zoom with boundary handling
-            mapContainer.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                zoom(delta);
-
-                // Horizontal boundary handling
-                if (translateX > 0) {
-                    translateX = 0;
-                }
-
-                // Vertical boundary handling
-                if (translateY > 0) {
-                    translateY = 0;
-                }
-
                 updateTransform();
             });
 
