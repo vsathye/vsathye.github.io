@@ -34,10 +34,12 @@
             background-position: center;
             color: white;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-            transition: transform 0.3s ease;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            overflow: hidden;
         }
         .button:hover {
-            transform: scale(1.05);
+            transform: scale(1.03);
         }
         .boring-resume-stuff {
             background-image: url('resumeclip.jpg');
@@ -55,22 +57,28 @@
             bottom: 0;
             background: rgba(0,0,0,0.3);
             border-radius: 10px;
-            z-index: 1;
+            transition: all 0.2s ease-in-out;
+        }
+        .button:hover::before {
+            background: rgba(0,0,0,0.4);
         }
         .button span {
             position: relative;
             z-index: 2;
         }
+        a {
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
     <div class="button-container">
-        <a href="resume.pdf" target="_blank" style="text-decoration: none;">
+        <a href="resume.pdf" target="_blank">
             <button class="button boring-resume-stuff">
                 <span>Boring Resume Stuff</span>
             </button>
         </a>
-        <a href="map.html" style="text-decoration: none;">
+        <a href="map.html">
             <button class="button map-project">
                 <span>Map Project</span>
             </button>
