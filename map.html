@@ -15,6 +15,7 @@
             width: 100vw;
             height: 100vh;
             position: relative;
+            cursor: grab;
         }
         #world-map {
             position: absolute;
@@ -29,7 +30,7 @@
             top: 10px;
             left: 10px;
             z-index: 10;
-            background: rgba(255,255,255,0.7);
+            background: rgba(255, 255, 255, 0.7);
             padding: 10px;
             border-radius: 5px;
         }
@@ -69,44 +70,46 @@
             const svgDoc = worldMap.contentDocument;
             const svgElement = svgDoc.documentElement;
 
+            // Update map transform
+            function updateTransform() {
+                svgElement.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                svgElement.style.transformOrigin = "0 0";
+            }
+
+            // Enforce map boundaries (optional, can be customized)
+            function enforceMapBounds() {
+                const containerWidth = mapContainer.clientWidth;
+                const containerHeight = mapContainer.clientHeight;
+                const scaledWidth = svgElement.getBoundingClientRect().width;
+                const scaledHeight = svgElement.getBoundingClientRect().height;
+
+                // Limit translation to prevent panning outside the map
+                translateX = Math.max(containerWidth - scaledWidth, Math.min(translateX, 0));
+                translateY = Math.max(containerHeight - scaledHeight, Math.min(translateY, 0));
+            }
+
             // Zoom functionality
-            function zoom(delta) {
-                const minZoom = 1;
-                const maxZoom = 7;
-                scale = Math.max(minZoom, Math.min(maxZoom, scale + delta));
+            function zoom(delta, centerX, centerY) {
+                const prevScale = scale;
+                scale = Math.max(1, Math.min(7, scale + delta));
+                const scaleFactor = scale / prevScale;
+
+                // Adjust translation to zoom into the center of the mouse
+                translateX = centerX - (centerX - translateX) * scaleFactor;
+                translateY = centerY - (centerY - translateY) * scaleFactor;
+
                 enforceMapBounds();
                 updateTransform();
             }
 
-            // Enforce map boundaries
-            function enforceMapBounds() {
-                const containerWidth = mapContainer.clientWidth;
-                const containerHeight = mapContainer.clientHeight;
-                const mapWidth = svgElement.getBoundingClientRect().width;
-                const mapHeight = svgElement.getBoundingClientRect().height;
-
-                // Calculate max allowed translation
-                const maxTranslateX = Math.max(0, (mapWidth - containerWidth) / 2);
-                const maxTranslateY = Math.max(0, (mapHeight - containerHeight) / 2);
-
-                // Restrict translation
-                translateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, translateX));
-                translateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, translateY));
-            }
-
-            // Update map transform
-            function updateTransform() {
-                svgElement.style.transform = `scale(${scale}) translate(${translateX}px, ${translateY}px)`;
-            }
-
             // Zoom in button
             zoomInBtn.addEventListener('click', () => {
-                zoom(0.25);
+                zoom(0.25, mapContainer.clientWidth / 2, mapContainer.clientHeight / 2);
             });
 
             // Zoom out button
             zoomOutBtn.addEventListener('click', () => {
-                zoom(-0.25);
+                zoom(-0.25, mapContainer.clientWidth / 2, mapContainer.clientHeight / 2);
             });
 
             // Reset view button
@@ -117,7 +120,7 @@
                 updateTransform();
             });
 
-            // Pan functionality
+            // Mouse drag to pan
             mapContainer.addEventListener('mousedown', (e) => {
                 isDragging = true;
                 startX = e.clientX - translateX;
@@ -127,7 +130,6 @@
 
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
-                
                 translateX = e.clientX - startX;
                 translateY = e.clientY - startY;
                 enforceMapBounds();
@@ -139,23 +141,14 @@
                 mapContainer.style.cursor = 'grab';
             });
 
-            // Scroll wheel zoom with boundary handling
+            // Scroll wheel zoom
             mapContainer.addEventListener('wheel', (e) => {
                 e.preventDefault();
+                const rect = mapContainer.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
                 const delta = e.deltaY > 0 ? -0.1 : 0.1;
-                zoom(delta);
-
-                // Horizontal boundary handling
-                if (translateX > 0) {
-                    translateX = 0;
-                }
-
-                // Vertical boundary handling
-                if (translateY > 0) {
-                    translateY = 0;
-                }
-
-                updateTransform();
+                zoom(delta, mouseX, mouseY);
             });
 
             // Initial cursor style
