@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map Project</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        #map {
+            width: 100%;
+            height: 100vh;
+            background-image: url('https://www.lib.utexas.edu/maps/historical/txu-pclmaps-oclc-6566240.jpg');
+            background-size: 100% 100%;
+            background-position: center;
+            transition: transform 0.5s;
+        }
+
+        #map.zoom-in {
+            transform: scale(2);
+        }
+
+        #map.zoom-out {
+            transform: scale(0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <button onclick="zoomIn()">Zoom In</button>
+    <button onclick="zoomOut()">Zoom Out</button>
+
+    <script>
+        let currentScale = 1;
+
+        function zoomIn() {
+            currentScale += 0.1;
+            document.getElementById('map').style.transform = `scale(${currentScale})`;
+        }
+
+        function zoomOut() {
+            currentScale -= 0.1;
+            document.getElementById('map').style.transform = `scale(${currentScale})`;
+        }
+    </script>
+</body>
+</html>
