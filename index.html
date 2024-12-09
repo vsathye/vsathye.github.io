@@ -13,13 +13,11 @@
             align-items: center;
             height: 100vh;
         }
-
         .button-container {
             display: flex;
             flex-direction: column;
             align-items: center;
         }
-
         .button {
             width: 300px;
             height: 150px;
@@ -32,28 +30,50 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
+            transition: transform 0.3s ease;
         }
-
+        .button:hover {
+            transform: scale(1.05);
+        }
         .boring-resume-stuff {
             background-image: url('resumeclip.jpg');
-            background-size: cover;
-            background-position: center;
         }
-
         .map-project {
             background-image: url('globeclip.jpg');
-            background-size: cover;
-            background-position: center;
+        }
+        /* Ensure text is readable over background image */
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            z-index: 1;
+        }
+        .button span {
+            position: relative;
+            z-index: 2;
         }
     </style>
 </head>
 <body>
     <div class="button-container">
-        <a href="resume.pdf" target="_blank">
-            <button class="button boring-resume-stuff">Boring Resume Stuff</button>
+        <a href="resume.pdf" target="_blank" style="text-decoration: none;">
+            <button class="button boring-resume-stuff">
+                <span>Boring Resume Stuff</span>
+            </button>
         </a>
-        <a href="map.html">
-            <button class="button map-project">Map Project</button>
+        <a href="map.html" style="text-decoration: none;">
+            <button class="button map-project">
+                <span>Map Project</span>
+            </button>
         </a>
     </div>
 </body>
