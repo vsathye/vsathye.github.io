@@ -1,7 +1,56 @@
 <!DOCTYPE html>
 <html>
+<head>
+    <title>Neal.fun Inspired Website</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .button-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .button {
+            width: 300px;
+            height: 150px;
+            margin: 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .boring-resume-stuff {
+            background-image: url('resumeclip.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .map-project {
+            background-image: url('globeclip.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+    </style>
+</head>
 <body>
-<h1>Blah Blah</h1>
-<p>blah blah blah</p>
+    <div class="button-container">
+        <button class="button boring-resume-stuff">Boring Resume Stuff</button>
+        <button class="button map-project">Map Project</button>
+    </div>
 </body>
 </html>
