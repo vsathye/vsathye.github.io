@@ -3,134 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Map</title>
+    <title>World Capitals Map</title>
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <style>
-        body {
+        body, html {
             margin: 0;
-            overflow: hidden;
+            padding: 0;
+            height: 100%;
         }
-        #container {
-            width: 100vw;
+        #map {
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #f0f0f0;
-            overflow: hidden;
-            position: relative;
-        }
-        svg {
-            cursor: grab;
-            user-select: none;
-        }
-        svg:active {
-            cursor: grabbing;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <div id="container">
-        <svg id="map" xmlns="http://www.w3.org/2000/svg">
-            <image href="worldmap.svg" x="0" y="0" width="2000" height="1000" />
-        </svg>
-    </div>
-
+    <!-- Map Container -->
+    <div id="map"></div>
+    
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        const svg = document.getElementById('map');
-        let isDragging = false;
-        let startX, startY;
+        // Initialize the map and set its view
+        const map = L.map('map').setView([16.5388, 7.0], 3); // Latitude, Longitude, Zoom level
 
-        const originalWidth = 2000;
-        const originalHeight = 1000;
-        const maxZoom = 6; // Maximum zoom level
-        const minZoom = 1; // Minimum zoom level
+        // Add a tile layer without labels
+        L.tileLayer('https://cartocdn_{s}.global.ssl.fastly.net/base-flatblue/{z}/{x}/{y}.png', {
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
 
-        let viewBoxX = 0, viewBoxY = 0, viewBoxWidth = originalWidth, viewBoxHeight = originalHeight;
+        // Function to load and add markers from CSV
+        function loadCapitals() {
+            // Fetch the CSV file
+            fetch('capitals.csv')
+                .then(response => response.text())
+                .then(csvText => {
+                    // Parse the CSV
+                    const results = Papa.parse(csvText, {
+                        header: true,
+                        dynamicTyping: true,
+                        skipEmptyLines: true
+                    });
 
-        // Set the initial viewBox
-        svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
-
-        // Mouse down event to start dragging
-        svg.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-        });
-
-        // Mouse move event for dragging
-        svg.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                const dx = (startX - e.clientX) * (viewBoxWidth / svg.clientWidth);
-                const dy = (startY - e.clientY) * (viewBoxHeight / svg.clientHeight);
-
-                viewBoxX += dx;
-                viewBoxY += dy;
-
-                svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
-
-                startX = e.clientX;
-                startY = e.clientY;
-            }
-        });
-
-        // Mouse up event to stop dragging
-        svg.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
-
-        // Mouse wheel event for zooming
-        svg.addEventListener('wheel', (e) => {
-            e.preventDefault();
-            handleZoom(e.deltaY < 0 ? 1.1 : 1 / 1.1);
-        });
-
-        // Handle zoom (used for mouse and keyboard shortcuts)
-        function handleZoom(scaleFactor) {
-            const centerX = viewBoxX + viewBoxWidth / 2;
-            const centerY = viewBoxY + viewBoxHeight / 2;
-
-            let newWidth = viewBoxWidth * (1 / scaleFactor);
-            let newHeight = viewBoxHeight * (1 / scaleFactor);
-
-            // Constrain zoom to max and min levels
-            if (newWidth < originalWidth / maxZoom || newWidth > originalWidth) {
-                return;
-            }
-
-            viewBoxWidth = newWidth;
-            viewBoxHeight = newHeight;
-
-            // Adjust the viewBox to zoom on the center
-            viewBoxX = centerX - viewBoxWidth / 2;
-            viewBoxY = centerY - viewBoxHeight / 2;
-
-            svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+                    // Add markers for each capital
+                    results.data.forEach(city => {
+                        // Check if latitude and longitude are valid numbers
+                        if (city.Latitude != null && city.Longitude != null) {
+                            L.circleMarker([city.Latitude, city.Longitude], {
+                                radius: 5,
+                                fillColor: '#ff0000',
+                                color: '#000',
+                                weight: 1,
+                                opacity: 1,
+                                fillOpacity: 0.8
+                            }).addTo(map)
+                                .bindPopup(`<b>${city.Name}</b>`);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading capitals:', error);
+                });
         }
 
-        // Reset the viewBox to original state
-        function resetZoom() {
-            viewBoxX = 0;
-            viewBoxY = 0;
-            viewBoxWidth = originalWidth;
-            viewBoxHeight = originalHeight;
-
-            svg.setAttribute('viewBox', `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
-        }
-
-        // Keyboard shortcuts for zoom and reset
-        document.addEventListener('keydown', (e) => {
-            if (e.key === '+') {
-                handleZoom(1.1); // Zoom in
-            } else if (e.key === '-') {
-                handleZoom(1 / 1.1); // Zoom out
-            } else if (e.key === 'r') {
-                resetZoom(); // Reset zoom
-            }
-        });
-
-        // Prevent text selection on drag
-        svg.addEventListener('mouseleave', () => { isDragging = false; });
-        svg.addEventListener('contextmenu', (e) => e.preventDefault());
+        // Load capitals when map is ready
+        loadCapitals();
     </script>
 </body>
 </html>
