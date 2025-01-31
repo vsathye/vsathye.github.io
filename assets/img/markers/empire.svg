@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+    <!-- Empire Marker (Large Circle with Crown) -->
+    <circle cx="16" cy="16" r="14" 
+            fill="currentColor" 
+            fill-opacity="0.2"
+            stroke="currentColor" 
+            stroke-width="2"/>
+            
+    <!-- Crown symbol -->
+    <path d="M10 20l3-6 3 4 3-4 3 6H10z" 
+          fill="currentColor"
+          stroke="currentColor" 
+          stroke-width="1"/>
+          
+    <!-- Selection ring (normally hidden, shown when .selected class is added) -->
+    <circle cx="16" cy="16" r="15" 
+            class="selection-ring"
+            stroke="currentColor" 
+            stroke-width="2"
+            fill="none"
+            opacity="0"
+            style="opacity: 0; transition: opacity 0.2s ease;"/>
+</svg>

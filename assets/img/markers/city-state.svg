@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <!-- City-State Marker (Small Circle with Temple) -->
+    <circle cx="8" cy="8" r="6" 
+            fill="currentColor" 
+            fill-opacity="0.2"
+            stroke="currentColor" 
+            stroke-width="2"/>
+            
+    <!-- Temple symbol -->
+    <path d="M5 11h6M8 5l3 2H5l3-2z" 
+          fill="currentColor"
+          stroke="currentColor" 
+          stroke-width="1"/>
+          
+    <!-- Selection ring -->
+    <circle cx="8" cy="8" r="7" 
+            class="selection-ring"
+            stroke="currentColor" 
+            stroke-width="2"
+            fill="none"
+            opacity="0"
+            style="opacity: 0; transition: opacity 0.2s ease;"/>
+</svg>

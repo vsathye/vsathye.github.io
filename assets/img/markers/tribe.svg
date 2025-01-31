@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+    <!-- Tribe Marker (Triangle) -->
+    <path d="M10 2L18 17H2L10 2z" 
+          fill="currentColor" 
+          fill-opacity="0.2"
+          stroke="currentColor" 
+          stroke-width="2"/>
+          
+    <!-- Selection ring -->
+    <path d="M10 1L19 17H1L10 1z" 
+          class="selection-ring"
+          stroke="currentColor" 
+          stroke-width="2"
+          fill="none"
+          opacity="0"
+          style="opacity: 0; transition: opacity 0.2s ease;"/>
+</svg>

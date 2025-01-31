@@ -1,76 +1,84 @@
+<!-- This file will serve as the main application page including:
+// - Basic HTML structure for the application
+// - Required meta tags and viewport settings
+// - CSS stylesheet references
+//   - Main stylesheet (styles.css)
+//   - Slider styles (slider.css)
+//   - Map styles (map.css)
+//   - Modal styles (modal.css)
+// - External library imports
+//   - D3.js for visualization
+//   - noUiSlider for timeline
+// - Container structure for all components
+// - JavaScript file imports in correct dependency order
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>World Capitals Map</title>
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
-    <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            height: 100%;
-        }
-        #map {
-            height: 100vh;
-            width: 100%;
-        }
-    </style>
+    <meta name="description" content="Interactive historical world map showing governments and their interactions from 5000 BC to 2025 AD">
+    <title>Historical World Map</title>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/slider.css">
+    <link rel="stylesheet" href="assets/css/map.css">
+    <link rel="stylesheet" href="assets/css/modal.css">
+    
+    <!-- External Libraries -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 </head>
 <body>
-    <!-- Map Container -->
-    <div id="map"></div>
+    <!-- Main application containers -->
+    <div id="app-container">
+        <!-- Map visualization area -->
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="map-controls"></div>
+            <div id="map-legend"></div>
+        </div>
+        
+        <!-- Timeline controls -->
+        <div id="timeline-container">
+            <div id="time-slider"></div>
+            <div id="time-labels"></div>
+        </div>
+        
+        <!-- Information display areas -->
+        <div id="info-panel"></div>
+        <div id="modal-container"></div>
+    </div>
+
+    <!-- Configuration -->
+    <script src="assets/js/config/constants.js"></script>
+    <script src="assets/js/config/mapConfig.js"></script>
+
+    <!-- Utilities -->
+    <script src="assets/js/utils/dateUtils.js"></script>
+    <script src="assets/js/utils/geoUtils.js"></script>
+    <script src="assets/js/utils/dataUtils.js"></script>
+
+    <!-- Services -->
+    <script src="assets/js/services/dataLoader.js"></script>
+    <script src="assets/js/services/stateManager.js"></script>
+
+    <!-- Components -->
+    <script src="assets/js/components/Map/Map.js"></script>
+    <script src="assets/js/components/Map/Node.js"></script>
+    <script src="assets/js/components/Map/Edge.js"></script>
     
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // Initialize the map and set its view
-        const map = L.map('map').setView([16.5388, 7.0], 3); // Latitude, Longitude, Zoom level
+    <script src="assets/js/components/Timeline/Slider.js"></script>
+    <script src="assets/js/components/Timeline/Labels.js"></script>
+    
+    <script src="assets/js/components/UI/Modal.js"></script>
+    <script src="assets/js/components/UI/Legend.js"></script>
+    <script src="assets/js/components/UI/Controls.js"></script>
 
-        // Add a tile layer without labels
-        L.tileLayer('https://cartocdn_{s}.global.ssl.fastly.net/base-flatblue/{z}/{x}/{y}.png', {
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
-
-        // Function to load and add markers from CSV
-        function loadCapitals() {
-            // Fetch the CSV file
-            fetch('capitals.csv')
-                .then(response => response.text())
-                .then(csvText => {
-                    // Parse the CSV
-                    const results = Papa.parse(csvText, {
-                        header: true,
-                        dynamicTyping: true,
-                        skipEmptyLines: true
-                    });
-
-                    // Add markers for each capital
-                    results.data.forEach(city => {
-                        // Check if latitude and longitude are valid numbers
-                        if (city.Latitude != null && city.Longitude != null) {
-                            L.circleMarker([city.Latitude, city.Longitude], {
-                                radius: 5,
-                                fillColor: '#ff0000',
-                                color: '#000',
-                                weight: 1,
-                                opacity: 1,
-                                fillOpacity: 0.8
-                            }).addTo(map)
-                                .bindPopup(`<b>${city.Name}</b>`);
-                        }
-                    });
-                })
-                .catch(error => {
-                    console.error('Error loading capitals:', error);
-                });
-        }
-
-        // Load capitals when map is ready
-        loadCapitals();
-    </script>
+    <!-- Main application entry -->
+    <script src="assets/js/main.js"></script>
 </body>
 </html>
