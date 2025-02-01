@@ -1,118 +1,101 @@
-import { TIME, EVENTS } from '../config/constants';
-import dataLoader from './dataLoader';
-
-class StateManager {
-    constructor() {
-        // Core application state
-        this.state = {
-            time: {
-                currentYear: TIME.START_YEAR,
-                period: null,
-                isPlaying: false,
-                playbackSpeed: 1
-            },
-            selection: {
-                governments: new Set(),
-                interactions: new Set()
-            },
-            filters: {
-                governments: new Set(),
-                interactions: new Set()
-            },
-            ui: {
-                zoom: 4,
-                center: [20, 30],
-                activeModals: new Set(),
-                legend: {
-                    visible: true,
-                    expanded: true
-                },
-                controls: {
-                    visible: true
-                }
-            },
-            data: {
-                loading: false,
-                error: null,
-                visibleGovernments: new Set(),
-                visibleInteractions: new Set()
-            }
-        };
-
-        // State history for undo/redo
-        this.history = {
-            past: [],
-            future: [],
-            maxSize: 50 // Maximum number of states to keep
-        };
-
-        // Subscribers for state changes
-        this.subscribers = new Map();
-
-        // Debounce and throttle timers
-        this.timers = {
-            save: null,
-            update: null,
-            debounceDelay: 300,
-            throttleDelay: 100
-        };
-
-        // Debug mode flag
-        this.debugMode = process.env.NODE_ENV === 'development';
-
-        // Initialize state
-        this.init();
+// Initialize state manager with defaults
+const state = {
+    time: {
+        currentYear: window.dateUtils.TIME.START_YEAR,
+        period: null,
+        isPlaying: false,
+        playbackSpeed: 1
+    },
+    selection: {
+        governments: new Set(),
+        interactions: new Set()
+    },
+    filters: {
+        governments: new Set(),
+        interactions: new Set()
+    },
+    ui: {
+        zoom: 4,
+        center: [20, 30],
+        activeModals: new Set(),
+        legend: {
+            visible: true,
+            expanded: true
+        },
+        controls: {
+            visible: true
+        }
+    },
+    data: {
+        loading: false,
+        error: null,
+        visibleGovernments: new Set(),
+        visibleInteractions: new Set()
     }
+};
 
-    /**
-     * Initialize state manager
-     */
+// History management
+const history = {
+    past: [],
+    future: [],
+    maxSize: 50
+};
+
+// Subscribers for state changes
+const subscribers = new Map();
+
+// Timers for debouncing and throttling
+const timers = {
+    save: null,
+    update: null,
+    debounceDelay: 300,
+    throttleDelay: 100
+};
+
+// Debug mode flag
+const debugMode = false;
+
+const stateManager = {
+    // Core state management
+    getState: () => ({ ...state }),
+    
     async init() {
-        this.loadPersistedState();
-        this.setupEventListeners();
+        stateManager.loadPersistedState();
+        stateManager.setupEventListeners();
         
-        // Initial data load
         try {
-            await this.loadData();
+            await stateManager.loadData();
         } catch (error) {
-            this.updateState({
-                data: { ...this.state.data, error: error.message }
+            stateManager.updateState({
+                data: { ...state.data, error: error.message }
             });
         }
-    }
+    },
 
-    /**
-     * Load data for the current time period
-     */
     async loadData() {
-        this.updateState({
-            data: { ...this.state.data, loading: true, error: null }
+        stateManager.updateState({
+            data: { ...state.data, loading: true, error: null }
         });
 
         try {
-            const yearData = await dataLoader.getDataForYear(this.state.time.currentYear);
+            const yearData = await window.dataLoader.getDataForYear(state.time.currentYear);
             
-            this.updateState({
+            stateManager.updateState({
                 data: {
-                    ...this.state.data,
+                    ...state.data,
                     loading: false,
                     visibleGovernments: new Set(yearData.governments.map(g => g.id)),
                     visibleInteractions: new Set(yearData.interactions.map(i => i.id))
                 }
             });
         } catch (error) {
-            this.updateState({
-                data: { ...this.state.data, loading: false, error: error.message }
+            stateManager.updateState({
+                data: { ...state.data, loading: false, error: error.message }
             });
             throw error;
         }
-    }
+    },
 
-    /**
-     * Update application state
-     * @param {Object} updates State updates
-     * @param {Object} options Update options
-     */
     updateState(updates, options = {}) {
         const { 
             recordHistory = true,
@@ -120,132 +103,92 @@ class StateManager {
             throttle = false
         } = options;
 
-        // Handle debouncing
         if (debounce) {
-            clearTimeout(this.timers.update);
-            this.timers.update = setTimeout(() => {
-                this.updateState(updates, { ...options, debounce: false });
-            }, this.timers.debounceDelay);
+            clearTimeout(timers.update);
+            timers.update = setTimeout(() => {
+                stateManager.updateState(updates, { ...options, debounce: false });
+            }, timers.debounceDelay);
             return;
         }
 
-        // Handle throttling
-        if (throttle && this.timers.update) {
+        if (throttle && timers.update) {
             return;
         }
 
-        // Record current state in history if needed
         if (recordHistory) {
-            this.recordStateChange();
+            stateManager.recordStateChange();
         }
 
-        // Create new state
-        const newState = this.mergeState(this.state, updates);
+        const newState = stateManager.mergeState(state, updates);
 
-        // Validate state changes
-        if (!this.validateStateChange(newState)) {
+        if (!stateManager.validateStateChange(newState)) {
             throw new Error('Invalid state change');
         }
 
-        // Update state
-        this.state = newState;
+        Object.assign(state, newState);
 
-        // Debug logging
-        if (this.debugMode) {
-            this.logStateChange(updates);
+        if (debugMode) {
+            stateManager.logStateChange(updates);
         }
 
-        // Notify subscribers
-        this.notifySubscribers(updates);
+        stateManager.notifySubscribers(updates);
+        stateManager.persistState();
 
-        // Persist state
-        this.persistState();
-
-        // Set throttle timer if needed
         if (throttle) {
-            this.timers.update = setTimeout(() => {
-                this.timers.update = null;
-            }, this.timers.throttleDelay);
+            timers.update = setTimeout(() => {
+                timers.update = null;
+            }, timers.throttleDelay);
         }
-    }
+    },
 
-    /**
-     * Merge updates with current state
-     * @param {Object} currentState Current state
-     * @param {Object} updates Updates to apply
-     * @returns {Object} New state
-     */
     mergeState(currentState, updates) {
         const newState = { ...currentState };
         
         Object.entries(updates).forEach(([key, value]) => {
             if (value && typeof value === 'object' && !Array.isArray(value)) {
-                newState[key] = this.mergeState(currentState[key] || {}, value);
+                newState[key] = stateManager.mergeState(currentState[key] || {}, value);
             } else {
                 newState[key] = value;
             }
         });
 
         return newState;
-    }
+    },
 
-    /**
-     * Validate state changes
-     * @param {Object} newState Proposed new state
-     * @returns {boolean} Validation result
-     */
     validateStateChange(newState) {
-        // Validate time
-        if (newState.time.currentYear < TIME.START_YEAR || 
-            newState.time.currentYear > TIME.END_YEAR) {
+        if (newState.time.currentYear < window.dateUtils.TIME.START_YEAR || 
+            newState.time.currentYear > window.dateUtils.TIME.END_YEAR) {
             return false;
         }
 
-        // Validate coordinates
         if (newState.ui.center[0] < -90 || newState.ui.center[0] > 90 ||
             newState.ui.center[1] < -180 || newState.ui.center[1] > 180) {
             return false;
         }
 
-        // Validate zoom
         if (newState.ui.zoom < 1 || newState.ui.zoom > 20) {
             return false;
         }
 
         return true;
-    }
+    },
 
-    /**
-     * Subscribe to state changes
-     * @param {string} componentId Component identifier
-     * @param {Function} callback Callback function
-     * @param {Array} dependencies State dependencies to watch
-     */
+    // Subscription management
     subscribe(componentId, callback, dependencies = null) {
-        this.subscribers.set(componentId, { callback, dependencies });
-    }
+        subscribers.set(componentId, { callback, dependencies });
+    },
 
-    /**
-     * Unsubscribe from state changes
-     * @param {string} componentId Component identifier
-     */
     unsubscribe(componentId) {
-        this.subscribers.delete(componentId);
-    }
+        subscribers.delete(componentId);
+    },
 
-    /**
-     * Notify subscribers of state changes
-     * @param {Object} updates State updates
-     */
     notifySubscribers(updates) {
-        this.subscribers.forEach(({ callback, dependencies }, componentId) => {
-            // If no dependencies specified, always notify
+        subscribers.forEach(({ callback, dependencies }, componentId) => {
             if (!dependencies) {
-                callback(this.state);
+                callback(state);
                 return;
             }
 
-            // Check if any dependencies were updated
             const shouldUpdate = dependencies.some(dep => {
                 const path = dep.split('.');
                 return path.some((key, index) => {
@@ -255,156 +198,128 @@ class StateManager {
             });
 
             if (shouldUpdate) {
-                callback(this.state);
+                callback(state);
             }
         });
-    }
+    },
 
-    /**
-     * Record state change in history
-     */
+    // History management
     recordStateChange() {
-        this.history.past.push(JSON.stringify(this.state));
-        this.history.future = []; // Clear redo history
+        history.past.push(JSON.stringify(state));
+        history.future = [];
 
-        // Maintain history size limit
-        if (this.history.past.length > this.history.maxSize) {
-            this.history.past.shift();
+        if (history.past.length > history.maxSize) {
+            history.past.shift();
         }
-    }
+    },
 
-    /**
-     * Undo last state change
-     */
     undo() {
-        if (this.history.past.length === 0) return;
+        if (history.past.length === 0) return;
 
-        const current = JSON.stringify(this.state);
-        const previous = this.history.past.pop();
+        const current = JSON.stringify(state);
+        const previous = history.past.pop();
 
-        this.history.future.push(current);
-        this.state = JSON.parse(previous);
-        this.notifySubscribers(this.state);
-    }
+        history.future.push(current);
+        Object.assign(state, JSON.parse(previous));
+        stateManager.notifySubscribers(state);
+    },
 
-    /**
-     * Redo last undone state change
-     */
     redo() {
-        if (this.history.future.length === 0) return;
+        if (history.future.length === 0) return;
 
-        const current = JSON.stringify(this.state);
-        const next = this.history.future.pop();
+        const current = JSON.stringify(state);
+        const next = history.future.pop();
 
-        this.history.past.push(current);
-        this.state = JSON.parse(next);
-        this.notifySubscribers(this.state);
-    }
+        history.past.push(current);
+        Object.assign(state, JSON.parse(next));
+        stateManager.notifySubscribers(state);
+    },
 
-    /**
-     * Create state snapshot
-     * @returns {Object} State snapshot
-     */
+    // Snapshot management
     createSnapshot() {
         return {
-            state: JSON.stringify(this.state),
+            state: JSON.stringify(state),
             timestamp: Date.now()
         };
-    }
+    },
 
-    /**
-     * Restore state from snapshot
-     * @param {Object} snapshot State snapshot
-     */
     restoreSnapshot(snapshot) {
         if (!snapshot || !snapshot.state) return;
 
         try {
             const restoredState = JSON.parse(snapshot.state);
-            this.updateState(restoredState, { recordHistory: false });
+            stateManager.updateState(restoredState, { recordHistory: false });
         } catch (error) {
             console.error('Failed to restore state snapshot:', error);
         }
-    }
+    },
 
-    /**
-     * Load persisted state
-     */
+    // Persistence
     loadPersistedState() {
         try {
             const saved = localStorage.getItem('appState');
             if (saved) {
                 const parsed = JSON.parse(saved);
-                this.updateState(parsed, { recordHistory: false });
+                stateManager.updateState(parsed, { recordHistory: false });
             }
         } catch (error) {
             console.warn('Failed to load persisted state:', error);
         }
-    }
+    },
 
-    /**
-     * Persist current state
-     */
     persistState() {
-        clearTimeout(this.timers.save);
-        this.timers.save = setTimeout(() => {
+        clearTimeout(timers.save);
+        timers.save = setTimeout(() => {
             try {
-                localStorage.setItem('appState', JSON.stringify(this.state));
+                localStorage.setItem('appState', JSON.stringify(state));
             } catch (error) {
                 console.warn('Failed to persist state:', error);
             }
-        }, this.timers.debounceDelay);
-    }
+        }, timers.debounceDelay);
+    },
 
-    /**
-     * Setup event listeners
-     */
+    // Event handling
     setupEventListeners() {
-        // Listen for time changes
-        window.addEventListener(EVENTS.TIME.YEAR_CHANGED, async (e) => {
+        window.addEventListener('yearChanged', async (e) => {
             const { year } = e.detail;
-            await this.setYear(year);
+            await stateManager.setYear(year);
         });
 
-        // Listen for selection changes
-        window.addEventListener(EVENTS.MAP.SELECTION_CHANGED, (e) => {
+        window.addEventListener('selectionChanged', (e) => {
             const { governments, interactions } = e.detail;
-            this.updateState({
+            stateManager.updateState({
                 selection: { governments: new Set(governments), interactions: new Set(interactions) }
             });
         });
 
-        // Handle window unload
         window.addEventListener('beforeunload', () => {
-            this.persistState();
+            stateManager.persistState();
         });
-    }
+    },
 
-    /**
-     * Set current year and load corresponding data
-     * @param {number} year Target year
-     */
     async setYear(year) {
-        if (year < TIME.START_YEAR || year > TIME.END_YEAR) return;
+        if (year < window.dateUtils.TIME.START_YEAR || year > window.dateUtils.TIME.END_YEAR) return;
 
-        this.updateState({
-            time: { ...this.state.time, currentYear: year }
+        stateManager.updateState({
+            time: { ...state.time, currentYear: year }
         });
 
-        await this.loadData();
-    }
+        await stateManager.loadData();
+    },
 
-    /**
-     * Log state change for debugging
-     * @param {Object} updates State updates
-     */
     logStateChange(updates) {
         console.group('State Update');
-        console.log('Previous State:', this.state);
+        console.log('Previous State:', state);
         console.log('Updates:', updates);
-        console.log('New State:', this.mergeState(this.state, updates));
+        console.log('New State:', stateManager.mergeState(state, updates));
         console.groupEnd();
     }
-}
+};
 
-export default new StateManager();
+// Make stateManager globally available
+window.stateManager = stateManager;
+
+// Initialize on load
+window.addEventListener('DOMContentLoaded', () => {
+    stateManager.init();
+});

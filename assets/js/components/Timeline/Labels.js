@@ -247,4 +247,4 @@ class TimelineLabels {
     }
 }
 
-export default TimelineLabels;
+window.TimelineLabels = TimelineLabels;

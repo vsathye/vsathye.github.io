@@ -303,4 +303,4 @@ class Modal {
     }
 }
 
-export default Modal;
+window.Modal = Modal;

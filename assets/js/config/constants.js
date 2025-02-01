@@ -1,11 +1,12 @@
 // Time range for the application
-const TIME_RANGE = {
-    MIN: -5000,  // 5000 BC
-    MAX: 2025    // 2025 AD
+export const TIME = {
+    START_YEAR: -5000,  // 5000 BC
+    END_YEAR: 2025,    // 2025 AD
+    DEFAULT_YEAR: 0
 };
 
 // Government types and their visual properties
-const GOVERNMENT_TYPES = {
+export const GOVERNMENT_TYPES = {
     EMPIRE: {
         size: 32,
         shape: 'circle',
@@ -29,7 +30,7 @@ const GOVERNMENT_TYPES = {
 };
 
 // Interaction types and their visual properties
-const INTERACTION_TYPES = {
+export const INTERACTION_TYPES = {
     WAR: {
         color: '#FF0000',
         lineStyle: 'solid',
@@ -54,5 +55,15 @@ const INTERACTION_TYPES = {
         color: '#FFD700',
         lineStyle: 'dotted',
         iconPath: '/assets/img/icons/interactions/tribute.svg'
+    }
+};
+
+// Custom events
+export const EVENTS = {
+    TIME: {
+        YEAR_CHANGED: 'yearChanged'
+    },
+    MAP: {
+        SELECTION_CHANGED: 'selectionChanged'
     }
 };

@@ -281,4 +281,4 @@ class Legend {
     }
 }
 
-export default Legend;
+window.Legend = Legend;

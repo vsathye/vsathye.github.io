@@ -1,18 +1,3 @@
-<!-- This file will serve as the main application page including:
-// - Basic HTML structure for the application
-// - Required meta tags and viewport settings
-// - CSS stylesheet references
-//   - Main stylesheet (styles.css)
-//   - Slider styles (slider.css)
-//   - Map styles (map.css)
-//   - Modal styles (modal.css)
-// - External library imports
-//   - D3.js for visualization
-//   - noUiSlider for timeline
-// - Container structure for all components
-// - JavaScript file imports in correct dependency order
--->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -29,56 +14,76 @@
     
     <!-- External Libraries -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://unpkg.com/topojson@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/noUiSlider/15.7.1/nouislider.min.js"></script>
 </head>
 <body>
     <!-- Main application containers -->
-    <div id="app-container">
-        <!-- Map visualization area -->
-        <div id="map-container">
-            <div id="map"></div>
-            <div id="map-controls"></div>
-            <div id="map-legend"></div>
-        </div>
-        
-        <!-- Timeline controls -->
-        <div id="timeline-container">
-            <div id="time-slider"></div>
-            <div id="time-labels"></div>
-        </div>
-        
-        <!-- Information display areas -->
-        <div id="info-panel"></div>
+    <div id="app-container" class="h-screen w-full flex flex-col">
+        <!-- Main content area -->
+        <main class="flex-1 flex flex-col relative">
+            <!-- Map visualization area - takes most of the space -->
+            <div id="map-container" class="flex-1 relative">
+                <!-- Main map SVG container -->
+                <div id="map" class="w-full h-full"></div>
+                
+                <!-- Overlay controls -->
+                <div id="map-controls" class="absolute top-4 right-4 bg-white p-2 rounded shadow-lg">
+                    <div id="zoom-controls"></div>
+                    <div id="view-controls"></div>
+                </div>
+
+                <!-- Map legend -->
+                <div id="map-legend" class="absolute bottom-4 right-4 bg-white p-2 rounded shadow-lg">
+                    <h3>Legend</h3>
+                    <div id="government-types"></div>
+                    <div id="interaction-types"></div>
+                </div>
+            </div>
+
+            <!-- Timeline slider area - fixed height at bottom -->
+            <div id="timeline-container" class="h-32 bg-white border-t border-gray-200 p-4">
+                <div id="time-slider" class="h-4 mb-2"></div>
+                <div id="time-labels" class="flex justify-between text-sm"></div>
+            </div>
+        </main>
+
+        <!-- Modals container for popups -->
         <div id="modal-container"></div>
     </div>
 
-    <!-- Configuration -->
-    <script src="assets/js/config/constants.js"></script>
-    <script src="assets/js/config/mapConfig.js"></script>
+    <!-- Configuration - these should load first as they contain global constants -->
+    <script type="module" src="assets/js/config/constants.js"></script>
+    <script type="module" src="assets/js/config/mapConfig.js"></script>
 
-    <!-- Utilities -->
-    <script src="assets/js/utils/dateUtils.js"></script>
-    <script src="assets/js/utils/geoUtils.js"></script>
-    <script src="assets/js/utils/dataUtils.js"></script>
+    <!-- Utilities - basic utility functions used by everything -->
+    <script type="module" src="assets/js/utils/dateUtils.js"></script>
+    <script type="module" src="assets/js/utils/geoUtils.js"></script>
+    <script type="module" src="assets/js/utils/dataUtils.js"></script>
 
-    <!-- Services -->
-    <script src="assets/js/services/dataLoader.js"></script>
-    <script src="assets/js/services/stateManager.js"></script>
+    <!-- Base UI Components - core UI elements that other components might need -->
+    <script type="module" src="assets/js/components/UI/Modal.js"></script>
 
-    <!-- Components -->
-    <script src="assets/js/components/Map/Map.js"></script>
-    <script src="assets/js/components/Map/Node.js"></script>
-    <script src="assets/js/components/Map/Edge.js"></script>
-    
-    <script src="assets/js/components/Timeline/Slider.js"></script>
-    <script src="assets/js/components/Timeline/Labels.js"></script>
-    
-    <script src="assets/js/components/UI/Modal.js"></script>
-    <script src="assets/js/components/UI/Legend.js"></script>
-    <script src="assets/js/components/UI/Controls.js"></script>
+    <!-- Services - these might use utils but are used by components -->
+    <script type="module" src="assets/js/services/dataLoader.js"></script>
+    <script type="module" src="assets/js/services/stateManager.js"></script>
 
-    <!-- Main application entry -->
-    <script src="assets/js/main.js"></script>
+    <!-- Map Components - Map.js likely depends on Node.js and Edge.js -->
+    <script type="module" src="assets/js/components/Map/Node.js"></script>
+    <script type="module" src="assets/js/components/Map/Edge.js"></script>
+    <script type="module" src="assets/js/components/Map/Map.js"></script>
+
+    <!-- Other UI Components -->
+    <script type="module" src="assets/js/components/UI/Legend.js"></script>
+    <script type="module" src="assets/js/components/UI/Controls.js"></script>
+
+    <!-- Timeline Components -->
+    <script type="module" src="assets/js/components/Timeline/Labels.js"></script>
+    <script type="module" src="assets/js/components/Timeline/Slider.js"></script>
+
+    <!-- Main application entry - should always be last -->
+    <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>

@@ -233,8 +233,7 @@ class Node {
     }
 }
 
-// Node factory function for creating nodes from data
-export const createNode = (data) => {
+function createNode(data) {
     return new Node({
         type: data.type,
         name: data.name,
@@ -245,8 +244,24 @@ export const createNode = (data) => {
         description: data.description,
         latitude: data.latitude,
         longitude: data.longitude,
-        // Add any additional properties from data
     });
-};
+}
+// // Node factory function for creating nodes from data
+// export const createNode = (data) => {
+//     return new Node({
+//         type: data.type,
+//         name: data.name,
+//         startDate: data.startDate,
+//         endDate: data.endDate,
+//         capital: data.capital,
+//         population: data.population,
+//         description: data.description,
+//         latitude: data.latitude,
+//         longitude: data.longitude,
+//         // Add any additional properties from data
+//     });
+// };
 
-export default Node;
+// export default Node;
+window.Node = Node;
+window.createNode = createNode;

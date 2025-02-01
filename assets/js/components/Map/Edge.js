@@ -118,14 +118,24 @@ class Edge {
     }
 }
 
-// Edge factory function for creating edges from data
-export const createEdge = (sourceNode, targetNode, data) => {
+function createEdge(sourceNode, targetNode, data) {
     return new Edge(sourceNode, targetNode, {
         interactionType: data.type,
         date: data.date,
         description: data.description,
-        // Add any additional properties from data
     });
-};
+}
 
-export default Edge;
+// // Edge factory function for creating edges from data
+// export const createEdge = (sourceNode, targetNode, data) => {
+//     return new Edge(sourceNode, targetNode, {
+//         interactionType: data.type,
+//         date: data.date,
+//         description: data.description,
+//         // Add any additional properties from data
+//     });
+// };
+
+// export default Edge;
+window.Edge = Edge;
+window.createEdge = createEdge;

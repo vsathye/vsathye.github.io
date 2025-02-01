@@ -256,4 +256,4 @@ class Controls {
     }
 }
 
-export default Controls;
+window.Controls = Controls;

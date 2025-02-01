@@ -1,22 +1,10 @@
-/**
- * Earth constants in kilometers
- */
 const EARTH = {
     RADIUS: 6371, // Average radius in kilometers
     EQUATORIAL_RADIUS: 6378.137,
     POLAR_RADIUS: 6356.752
 };
 
-/**
- * Coordinate Operations
- */
-export const coordinate = {
-    /**
-     * Validate coordinates
-     * @param {number} lat Latitude
-     * @param {number} lng Longitude
-     * @returns {boolean} Validity result
-     */
+const coordinate = {
     isValid: (lat, lng) => {
         return typeof lat === 'number' && 
                typeof lng === 'number' &&
@@ -24,12 +12,6 @@ export const coordinate = {
                lng >= -180 && lng <= 180;
     },
 
-    /**
-     * Convert decimal degrees to DMS
-     * @param {number} decimal Decimal degrees
-     * @param {boolean} isLatitude Whether coordinate is latitude
-     * @returns {string} DMS string
-     */
     decimalToDMS: (decimal, isLatitude) => {
         const absolute = Math.abs(decimal);
         const degrees = Math.floor(absolute);
@@ -44,11 +26,6 @@ export const coordinate = {
         return `${degrees}°${minutes}'${seconds}"${direction}`;
     },
 
-    /**
-     * Convert DMS to decimal degrees
-     * @param {string} dms DMS string
-     * @returns {number} Decimal degrees
-     */
     dmsToDecimal: (dms) => {
         const parts = dms.match(/^(-?\d+)°(\d+)'([\d.]+)"([NSEW])$/);
         if (!parts) return null;
@@ -62,27 +39,13 @@ export const coordinate = {
         return decimal;
     },
 
-    /**
-     * Normalize longitude to [-180, 180]
-     * @param {number} lng Longitude
-     * @returns {number} Normalized longitude
-     */
     normalizeLongitude: (lng) => {
         lng = lng % 360;
         return lng > 180 ? lng - 360 : (lng < -180 ? lng + 360 : lng);
     }
 };
 
-/**
- * Distance and Area Calculations
- */
-export const distance = {
-    /**
-     * Calculate great circle distance
-     * @param {Object} point1 First point {lat, lng}
-     * @param {Object} point2 Second point {lat, lng}
-     * @returns {number} Distance in kilometers
-     */
+const distance = {
     greatCircle: (point1, point2) => {
         const toRad = (deg) => deg * Math.PI / 180;
         
@@ -101,11 +64,6 @@ export const distance = {
         return EARTH.RADIUS * c;
     },
 
-    /**
-     * Calculate path length
-     * @param {Array} points Array of {lat, lng} points
-     * @returns {number} Path length in kilometers
-     */
     pathLength: (points) => {
         let length = 0;
         for (let i = 1; i < points.length; i++) {
@@ -114,11 +72,6 @@ export const distance = {
         return length;
     },
 
-    /**
-     * Calculate bounding box
-     * @param {Array} points Array of {lat, lng} points
-     * @returns {Object} Bounding box
-     */
     boundingBox: (points) => {
         const box = {
             minLat: 90,
@@ -138,16 +91,7 @@ export const distance = {
     }
 };
 
-/**
- * Path Operations
- */
-export const path = {
-    /**
-     * Simplify path using Douglas-Peucker algorithm
-     * @param {Array} points Array of {lat, lng} points
-     * @param {number} tolerance Simplification tolerance
-     * @returns {Array} Simplified points
-     */
+const path = {
     simplify: (points, tolerance) => {
         if (points.length <= 2) return points;
 
@@ -198,18 +142,10 @@ export const path = {
         return [points[0], points[points.length - 1]];
     },
 
-    /**
-     * Generate curved path between points
-     * @param {Object} start Start point {lat, lng}
-     * @param {Object} end End point {lat, lng}
-     * @param {number} curveStrength Curve strength (0-1)
-     * @returns {Array} Path points
-     */
     generateCurvedPath: (start, end, curveStrength = 0.5) => {
         const points = [];
         const steps = 50;
         
-        // Calculate control point for quadratic curve
         const midPoint = {
             lat: (start.lat + end.lat) / 2,
             lng: (start.lng + end.lng) / 2
@@ -226,7 +162,6 @@ export const path = {
             lng: midPoint.lng + Math.cos(angle + Math.PI/2) * distance * curveStrength
         };
 
-        // Generate points along curve
         for (let i = 0; i <= steps; i++) {
             const t = i / steps;
             points.push({
@@ -243,16 +178,7 @@ export const path = {
     }
 };
 
-/**
- * Spatial Operations
- */
-export const spatial = {
-    /**
-     * Test if point is in polygon
-     * @param {Object} point Test point {lat, lng}
-     * @param {Array} polygon Array of polygon points
-     * @returns {boolean} Containment result
-     */
+const spatial = {
     pointInPolygon: (point, polygon) => {
         let inside = false;
         for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
@@ -266,13 +192,6 @@ export const spatial = {
         return inside;
     },
 
-    /**
-     * Generate buffer around point
-     * @param {Object} center Center point {lat, lng}
-     * @param {number} radiusKm Radius in kilometers
-     * @param {number} points Number of points in buffer
-     * @returns {Array} Buffer polygon points
-     */
     generateBuffer: (center, radiusKm, points = 32) => {
         const buffer = [];
         const angularDistance = radiusKm / EARTH.RADIUS;
@@ -298,16 +217,7 @@ export const spatial = {
     }
 };
 
-/**
- * Viewport Calculations
- */
-export const viewport = {
-    /**
-     * Calculate zoom level to fit bounds
-     * @param {Object} bounds Bounding box
-     * @param {Object} mapSize Map size {width, height}
-     * @returns {number} Zoom level
-     */
+const viewport = {
     calculateZoom: (bounds, mapSize) => {
         const WORLD_DIM = { height: 256, width: 256 };
         const ZOOM_MAX = 21;
@@ -332,11 +242,6 @@ export const viewport = {
         return Math.min(latZoom, lngZoom, ZOOM_MAX);
     },
 
-    /**
-     * Get map center point
-     * @param {Object} bounds Bounding box
-     * @returns {Object} Center point
-     */
     getCenter: (bounds) => {
         return {
             lat: (bounds.minLat + bounds.maxLat) / 2,
@@ -345,7 +250,9 @@ export const viewport = {
     }
 };
 
-export default {
+// Make everything globally available
+window.geoUtils = {
+    EARTH,
     coordinate,
     distance,
     path,
