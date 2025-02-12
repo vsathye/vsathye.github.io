@@ -1,0 +1,29 @@
+/* Base map container styles */
+body {
+    margin: 0;
+    padding: 0;
+}
+
+#map {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+/* Map interaction styles */
+.maplibregl-popup {
+    max-width: 300px;
+}
+
+.maplibregl-popup-content {
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* Map navigation controls */
+.maplibregl-ctrl-group {
+    background: #fff;
+    border-radius: 4px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}

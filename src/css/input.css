@@ -1,0 +1,29 @@
+/* Year input field */
+#yearInput {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    padding: 10px;
+    font-size: 24px;
+    width: 150px;
+    z-index: 1;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    background: white;
+}
+
+#yearInput:focus {
+    outline: none;
+    border-color: #4CAF50;
+}
+
+/* Error state */
+#yearInput.error {
+    border-color: #F44336;
+}
+
+/* Placeholder styling */
+#yearInput::placeholder {
+    color: #999;
+    font-size: 18px;
+}

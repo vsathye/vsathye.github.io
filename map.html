@@ -13,88 +13,14 @@
     <!-- Add PapaParse for CSV handling -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 
-    <style>
-        body {
-            margin: 0;
-            padding: 0;
-        }
+    <link rel="stylesheet" href="src/css/map.css">
+    <link rel="stylesheet" href="src/css/legend.css">
+    <link rel="stylesheet" href="src/css/input.css">
 
-        #map {
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            width: 100%;
-        }
-
-        #yearInput {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            padding: 10px;
-            font-size: 24px;
-            width: 150px;
-            z-index: 1;
-        }
-
-        #legend {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            background: white;
-            padding: 10px;
-            border-radius: 4px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-            z-index: 1;
-            max-width: 300px;
-            transition: all 0.3s ease;
-        }
-
-        .legend-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-            margin-bottom: 10px;
-        }
-
-        .legend-content {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease-out;
-        }
-
-        .legend-content.expanded {
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .interaction-category {
-            margin-bottom: 15px;
-        }
-
-        .interaction-category h4 {
-            margin: 0 0 8px 0;
-            font-size: 14px;
-            color: #555;
-        }
-
-        .interaction-type {
-            display: flex;
-            align-items: center;
-            margin: 5px 0;
-            font-size: 12px;
-        }
-
-        .interaction-line {
-            width: 20px;
-            height: 2px;
-            margin-right: 8px;
-        }
-
-        .interaction-checkbox {
-            margin-right: 8px;
-        }
-    </style>
+    <script src="src/js/config/mapConfig.js"></script>
+    <script src="src/js/config/interactionColors.js"></script>
+    <script src="src/js/config/yearConfig.js"></script>
+    <script src="src/js/components/map.js"></script>
 </head>
 
 <body>
@@ -126,38 +52,8 @@
     </div>
     <input type="text" id="yearInput" placeholder="Enter year..." />
     <script>
-        const map = new maplibregl.Map({
-            container: 'map',
-            style: {
-                version: 8,
-                sources: {
-                    'world': {
-                        type: 'geojson',
-                        data: 'https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_land.geojson'
-                    }
-                },
-                layers: [
-                    {
-                        id: 'background',
-                        type: 'background',
-                        paint: {
-                            'background-color': '#a8d5e5'
-                        }
-                    },
-                    {
-                        id: 'land',
-                        type: 'fill',
-                        source: 'world',
-                        paint: {
-                            'fill-color': '#e8e0d8',
-                            'fill-outline-color': '#d3cbc4'
-                        }
-                    }
-                ]
-            },
-            center: [12.5, 41.9], // Centered on Rome
-            zoom: 4
-        });
+
+        const map = new maplibregl.Map(mapConfig);
 
 
         async function loadEntityData(entityName, year) {
@@ -356,66 +252,9 @@
             };
         }
 
-        const interactionColors = {
-            alliance_formation: '#4CAF50',
-            treaty_signing: '#4CAF50',
-            diplomatic_marriage: '#4CAF50',
-            vassalization: '#4CAF50',
-            tributary_relationship: '#4CAF50',
-            political_union: '#4CAF50',
-            diplomatic_mission: '#4CAF50',
-            mediation: '#4CAF50',
-            territorial_exchange: '#4CAF50',
 
-            full_scale_war: '#F44336',
-            border_skirmish: '#F44336',
-            naval_battle: '#F44336',
-            siege: '#F44336',
-            military_raid: '#F44336',
-            military_occupation: '#F44336',
-            military_alliance: '#F44336',
-            military_support: '#F44336',
-            rebellion_suppression: '#F44336',
-
-            trade_agreement: '#FFC107',
-            trade_route_establishment: '#FFC107',
-            resource_exchange: '#FFC107',
-            monetary_tribute: '#FFC107',
-            economic_sanctions: '#FFC107',
-            trade_monopoly: '#FFC107',
-            joint_venture: '#FFC107',
-            economic_alliance: '#FFC107',
-
-            cultural_exchange: '#9C27B0',
-            religious_spread: '#9C27B0',
-            technological_transfer: '#9C27B0',
-            artistic_influence: '#9C27B0',
-            educational_exchange: '#9C27B0',
-            population_migration: '#9C27B0',
-            architectural_influence: '#9C27B0',
-            language_adoption: '#9C27B0'
-        };
 
         let visibleInteractionTypes = new Set(Object.keys(interactionColors));
-
-        // // // Test function - you can remove this after verifying it works
-        // writeEntity('roman_empire', 1).then(data => {
-        //     if (data) {
-        //         console.log('Successfully displayed:', data);
-        //     }
-        // });
-
-        // writeEntity('satakarni_dynasty', 1).then(data => {
-        //     if (data) {
-        //         console.log('Successfully displayed:', data);
-        //     }
-        // });
-
-        // writeEntity('parthian_empire', 1).then(data => {
-        //     if (data) {
-        //         console.log('Successfully displayed:', data);
-        //     }
-        // });
 
         async function writeInteraction(year) {
 
@@ -593,19 +432,11 @@
             });
         }
 
-        // map.on('load', () => {
-        //     writeInteraction(1).then(() => {
-        //         console.log('Test for year 1 CE completed');
-        //     }).catch(error => {
-        //         console.error('Error in test:', error);
-        //     });
-        // });
-
         function yearChangeHandler(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 const year = parseInt(e.target.value);
-                if (isNaN(year) || year < -5000 || year > 2025) {
+                if (isNaN(year) || year < yearConfig.min || year > yearConfig.max) {
                     yearInput.style.borderColor = 'red';
                     return;
                 }
@@ -623,33 +454,6 @@
         const legendContent = legend.querySelector('.legend-content');
         const legendHeader = legend.querySelector('.legend-header');
         const expandIcon = legend.querySelector('.expand-icon');
-
-        // Track visible interaction types
-        
-
-        // Interaction categories
-        const interactionCategories = {
-            diplomatic: {
-                title: 'Diplomatic/Political',
-                types: ['alliance_formation', 'treaty_signing', 'diplomatic_marriage', 'vassalization',
-                    'tributary_relationship', 'political_union', 'diplomatic_mission', 'mediation', 'territorial_exchange']
-            },
-            military: {
-                title: 'Military/Conflict',
-                types: ['full_scale_war', 'border_skirmish', 'naval_battle', 'siege', 'military_raid',
-                    'military_occupation', 'military_alliance', 'military_support', 'rebellion_suppression']
-            },
-            economic: {
-                title: 'Economic',
-                types: ['trade_agreement', 'trade_route_establishment', 'resource_exchange', 'monetary_tribute',
-                    'economic_sanctions', 'trade_monopoly', 'joint_venture', 'economic_alliance']
-            },
-            cultural: {
-                title: 'Cultural',
-                types: ['cultural_exchange', 'religious_spread', 'technological_transfer', 'artistic_influence',
-                    'educational_exchange', 'population_migration', 'architectural_influence', 'language_adoption']
-            }
-        };
 
         // Populate legend content
         Object.values(interactionCategories).forEach(category => {
