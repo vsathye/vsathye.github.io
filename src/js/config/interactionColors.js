@@ -1,4 +1,4 @@
-const interactionColors = {
+export const interactionColors = {
     alliance_formation: '#4CAF50',
     treaty_signing: '#4CAF50',
     diplomatic_marriage: '#4CAF50',
@@ -38,7 +38,7 @@ const interactionColors = {
     language_adoption: '#9C27B0'
 };
 
-const interactionCategories = {
+export const interactionCategories = {
     diplomatic: {
         title: 'Diplomatic/Political',
         types: ['alliance_formation', 'treaty_signing', 'diplomatic_marriage', 'vassalization',

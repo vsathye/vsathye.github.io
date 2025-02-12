@@ -1,5 +1,5 @@
 // The initial map configuration
-const mapConfig = {
+export const mapConfig = {
     container: 'map',
     style: {
         version: 8,
